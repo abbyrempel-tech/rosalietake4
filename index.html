@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Rosalie's Trials — Master RPG Edition</title>
+    <style>
+        :root {
+            --bg-dark: #090514;
+            --bg-card: #150d2a;
+            --bg-card-alt: #1f143d;
+            --purple-main: #5b21b6;
+            --purple-light: #7c3aed;
+            --purple-glow: #a855f7;
+            --gold-main: #d97706;
+            --gold-light: #f59e0b;
+            --gold-glow: #fbbf24;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --border-purple: #6d28d9;
+            --danger-red: #991b1b;
+            --danger-light: #ef4444;
+            --success-green: #065f46;
+            --success-light: #10b981;
+            --rarity-common: #9ca3af;
+            --rarity-uncommon: #10b981;
+            --rarity-rare: #3b82f6;
+            --rarity-epic: #a855f7;
+            --rarity-legendary: #f59e0b;
+            --rarity-mythic: #ec4899;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            padding-bottom: calc(85px + var(--safe-area-bottom));
+        }
+
+        /* HEADER HUD */
+        header {
+            background: linear-gradient(180deg, #180b30 0%, var(--bg-dark) 100%);
+            padding: 12px 16px 8px 16px;
+            border-bottom: 2px solid var(--purple-light);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.8);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .hero-title-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hero-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--gold-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+        }
+
+        .hero-level {
+            background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid var(--purple-glow);
+        }
+
+        .hud-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1.2fr;
+            gap: 6px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 6px;
+            padding: 4px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .stat-val-xp { color: #60a5fa; }
+        .stat-val-gold { color: var(--gold-light); }
+        .stat-val-energy { color: #f43f5e; }
+        .stat-val-region { color: #a7f3d0; font-size: 0.7rem; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+        .xp-bar-container {
+            width: 100%;
+            height: 5px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 3px;
+            margin-top: 6px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .xp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #a855f7);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* MAIN CONTAINER */
+        main {
+            padding: 16px;
+            flex: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* CARDS & UI COMPONENTS */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            margin-top: 8px;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .card-alt {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--purple-light);
+        }
+
+        /* TASK & QUEST CARDS */
+        .task-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-card.custom { border-left: 3px solid var(--purple-glow); }
+        .task-card.completed { background: rgba(6, 95, 70, 0.15); border-color: var(--success-green); opacity: 0.8; }
+
+        .task-info { flex: 1; padding-right: 12px; }
+        .task-name { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; color: #fff; }
+        .task-card.completed .task-name { text-decoration: line-through; color: var(--text-muted); }
+        
+        .reward-tag { background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; }
+
+        .btn-complete {
+            background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
+            color: white;
+            border: 1px solid var(--purple-glow);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            min-width: 80px;
+            text-align: center;
+        }
+        .btn-complete.done { background: var(--success-green); border-color: var(--success-light); cursor: default; }
+
+        .quest-card {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--purple-light);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .quest-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 0.85rem; margin-bottom: 4px; color: var(--gold-light); }
+        .quest-desc { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; }
+
+        /* BUTTONS & INPUTS */
+        .btn-action {
+            background: linear-gradient(135deg, var(--purple-main), var(--purple-light));
+            color: white;
+            border: 1px solid var(--purple-glow);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.08);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .btn-danger {
+            background: var(--danger-red);
+            color: white;
+            border: 1px solid var(--danger-light);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
+
+        /* INVENTORY GRID */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .inv-slot {
+            aspect-ratio: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .inv-slot.rarity-common { border-color: var(--rarity-common); }
+        .inv-slot.rarity-uncommon { border-color: var(--rarity-uncommon); }
+        .inv-slot.rarity-rare { border-color: var(--rarity-rare); box-shadow: 0 0 5px rgba(59, 130, 246, 0.3); }
+        .inv-slot.rarity-epic { border-color: var(--rarity-epic); box-shadow: 0 0 8px rgba(168, 85, 247, 0.4); }
+        .inv-slot.rarity-legendary { border-color: var(--rarity-legendary); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+        .inv-slot.rarity-mythic { border-color: var(--rarity-mythic); box-shadow: 0 0 12px rgba(236, 72, 153, 0.6); }
+
+        .equipped-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: var(--gold-light);
+            color: #000;
+            font-size: 0.55rem;
+            font-weight: 800;
+            padding: 1px 3px;
+            border-radius: 3px;
+        }
+
+        /* MAP & REGIONS */
+        .region-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .region-card.locked { opacity: 0.5; filter: grayscale(0.8); }
+        .region-card.active { border-color: var(--gold-light); background: linear-gradient(180deg, rgba(217, 119, 6, 0.1) 0%, var(--bg-card) 100%); }
+
+        .region-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .region-name { font-size: 1rem; font-weight: 800; color: var(--gold-light); }
+        .region-q { font-size: 0.7rem; color: var(--purple-glow); font-weight: 700; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; }
+
+        /* TAB NAVIGATION */
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0d071c;
+            border-top: 1px solid var(--purple-light);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 calc(8px + var(--safe-area-bottom)) 0;
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.8);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.65rem;
+            font-weight: 700;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 20%;
+        }
+
+        .nav-item.active { color: var(--gold-light); }
+        .nav-icon { font-size: 1.2rem; margin-bottom: 2px; }
+
+        /* MODALS & TOAST */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-content {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--purple-glow);
+            border-radius: 12px;
+            padding: 18px;
+            width: 100%;
+            max-width: 420px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+        }
+
+        .modal-title { font-size: 1.05rem; font-weight: 800; color: var(--gold-light); margin-bottom: 12px; text-transform: uppercase; }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--purple-main);
+            border: 2px solid var(--gold-light);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 700;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+            z-index: 3000;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+            text-align: center;
+            max-width: 90%;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .stat-box { background: rgba(0,0,0,0.3); padding: 6px; border-radius: 6px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-box-title { font-size: 0.6rem; color: var(--text-muted); }
+        .stat-box-val { font-size: 0.85rem; font-weight: 700; color: var(--gold-light); }
+    </style>
+</head>
+<body>
+
+    <!-- REWARD TOAST -->
+    <div id="toast" class="toast">
+        <div id="toast-title" style="color:var(--gold-light); font-size:0.75rem; text-transform:uppercase;">Trial Complete</div>
+        <div id="toast-body" style="font-size:0.88rem;">+10 XP | +5 Gold | +1 Energy</div>
+    </div>
+
+    <!-- HEADER / RPG HUD -->
+    <header>
+        <div class="header-top">
+            <div class="hero-title-container">
+                <span id="hud-hero-name" class="hero-name">Rosalie</span>
+                <span id="hud-hero-level" class="hero-level">Lvl 1</span>
+            </div>
+            <div id="hud-block-indicator" style="font-size:0.7rem; color:var(--text-muted); background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px;">BLOCK A</div>
+        </div>
+        <div class="hud-stats">
+            <div class="stat-card">
+                <span class="stat-label">XP</span>
+                <span id="hud-xp" class="stat-value stat-val-xp">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Gold</span>
+                <span id="hud-gold" class="stat-value stat-val-gold">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Energy</span>
+                <span id="hud-energy" class="stat-value stat-val-energy">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Region</span>
+                <span id="hud-region" class="stat-value stat-val-region">Trial Grounds</span>
+            </div>
+        </div>
+        <div class="xp-bar-container">
+            <div id="hud-xp-bar" class="xp-bar-fill"></div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main>
+        <!-- TAB 1: QUESTS & TRIALS -->
+        <div id="tab-quests" class="tab-content active">
+            <div id="date-display" style="font-size:0.78rem; color:var(--text-muted); margin-bottom:10px; text-align:center; background:rgba(0,0,0,0.3); padding:4px; border-radius:6px;">Loading date...</div>
+
+            <!-- TREASURE METER -->
+            <div class="card" style="margin-bottom:12px; padding:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; margin-bottom:4px;">
+                    <span style="color:var(--gold-light);">🎁 Daily Treasure Meter</span>
+                    <span id="treasure-meter-text">0 / 3 Chores</span>
+                </div>
+                <div style="height:8px; background:rgba(0,0,0,0.5); border-radius:4px; overflow:hidden;">
+                    <div id="treasure-meter-bar" style="height:100%; width:0%; background:linear-gradient(90deg, #f59e0b, #fbbf24); transition: width 0.3s ease;"></div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <div class="section-title">⚔️ Today's Trial Training</div>
+                <button class="btn-action" onclick="UI.openCustomChoreModal()">+ Custom Trial</button>
+            </div>
+
+            <div id="task-list-container"></div>
+
+            <div class="section-header" style="margin-top:20px;">
+                <div class="section-title">📜 Active Story & Side Quests</div>
+            </div>
+            <div id="quest-list-container"></div>
+        </div>
+
+        <!-- TAB 2: WORLD & REGIONS -->
+        <div id="tab-world" class="tab-content">
+            <div class="card card-alt" style="margin-bottom:12px; display:flex; gap:10px; align-items:center;">
+                <div style="font-size:2rem;">🧙‍♂️</div>
+                <div>
+                    <div style="font-size:0.75rem; font-weight:700; color:var(--gold-light);" id="npc-name">MASTER KAELEN</div>
+                    <div id="npc-text-dialogue" style="font-size:0.78rem; font-style:italic; color:var(--text-main);">"The Trial Grounds do not wait for the unprepared, Rosalie."</div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <div class="section-title">🗺️ Known Regions of the Realm</div>
+            </div>
+            <div id="region-list-container"></div>
+
+            <!-- SUNDAY BOSS CARD -->
+            <div class="card" style="border-color:var(--danger-light); background:linear-gradient(180deg, rgba(153, 27, 27, 0.2) 0%, var(--bg-card) 100%);">
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; margin-bottom:6px;">
+                    <span style="color:var(--danger-light);">WEEKLY TRIAL GROUND BOSS</span>
+                    <span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">SUNDAY ENCOUNTER</span>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+                    <div style="font-size:2.2rem;">👹</div>
+                    <div style="flex:1;">
+                        <div id="boss-name" style="font-weight:700; font-size:0.9rem;">The Shadow Warden</div>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">Uses Weekly Energy Pool</div>
+                        <div style="height:6px; background:rgba(0,0,0,0.5); border-radius:3px; margin-top:4px; overflow:hidden;">
+                            <div id="boss-hp-bar" style="height:100%; width:100%; background:var(--danger-light);"></div>
+                        </div>
+                    </div>
+                </div>
+                <button id="btn-fight-boss" class="btn-danger" style="width:100%; font-weight:800;" onclick="Engine.strikeBoss()">Commence Trial Strike</button>
+            </div>
+        </div>
+
+        <!-- TAB 3: INVENTORY & SHOP -->
+        <div id="tab-inventory" class="tab-content">
+            <div class="section-header">
+                <div class="section-title">🎒 Equipped Gear</div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-box"><div class="stat-box-title">Weapon</div><div id="eq-weapon" class="stat-box-val">None</div></div>
+                <div class="stat-box"><div class="stat-box-title">Armor</div><div id="eq-armor" class="stat-box-val">None</div></div>
+                <div class="stat-box"><div class="stat-box-title">Accessory</div><div id="eq-accessory" class="stat-box-val">None</div></div>
+            </div>
+
+            <div class="section-header">
+                <div class="section-title">📦 Inventory Vault</div>
+            </div>
+            <div id="inventory-container" class="inventory-grid"></div>
+
+            <div class="section-header" style="margin-top:20px;">
+                <div class="section-title">🛒 Pip's Wandering Shop</div>
+            </div>
+            <div id="shop-container"></div>
+        </div>
+
+        <!-- TAB 4: SANCTUARY -->
+        <div id="tab-sanctuary" class="tab-content">
+            <div class="card card-alt" style="text-align:center;">
+                <div style="font-size:2.5rem; margin-bottom:6px;">🏰</div>
+                <div style="font-size:1rem; font-weight:800; color:var(--gold-light);">Rosalie's Sanctuary</div>
+                <div style="font-size:0.75rem; color:var(--text-muted);">Your personal headquarters & trophy room.</div>
+            </div>
+
+            <div class="section-header">
+                <div class="section-title">🏆 Trophy & Decoration Hall</div>
+            </div>
+            <div id="sanctuary-decorations" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;"></div>
+        </div>
+
+        <!-- TAB 5: CODEX & SETTINGS -->
+        <div id="tab-codex" class="tab-content">
+            <div class="section-header">
+                <div class="section-title">📖 Hero RPG Profile & Stats</div>
+            </div>
+            <div class="card">
+                <div class="stats-grid">
+                    <div class="stat-box"><div class="stat-box-title">Courage</div><div id="rpg-stat-courage" class="stat-box-val">10</div></div>
+                    <div class="stat-box"><div class="stat-box-title">Wisdom</div><div id="rpg-stat-wisdom" class="stat-box-val">10</div></div>
+                    <div class="stat-box"><div class="stat-box-title">Agility</div><div id="rpg-stat-agility" class="stat-box-val">10</div></div>
+                    <div class="stat-box"><div class="stat-box-title">Kindness</div><div id="rpg-stat-kindness" class="stat-box-val">10</div></div>
+                    <div class="stat-box"><div class="stat-box-title">Craft</div><div id="rpg-stat-craft" class="stat-box-val">10</div></div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <div class="section-title">🏅 Hero Achievements</div>
+            </div>
+            <div id="achievement-container"></div>
+
+            <div class="section-header" style="margin-top:20px;">
+                <div class="section-title">⚙️ Settings & Parent Controls</div>
+            </div>
+            <div class="card">
+                <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Hero Name</label>
+                <input type="text" id="setting-hero-name" class="input-field" value="Rosalie">
+                <button class="btn-action" style="width:100%; margin-bottom:12px;" onclick="UI.saveHeroName()">Update Hero Name</button>
+
+                <div style="background:rgba(153, 27, 27, 0.2); border:1px solid var(--danger-light); padding:8px; border-radius:6px; font-size:0.72rem; color:#fca5a5; margin-bottom:10px; text-align:center;">
+                    🔒 PIN Authorization Required On Every Save
+                </div>
+
+                <button class="btn-secondary" style="width:100%; margin-bottom:6px;" onclick="UI.triggerProtectedAction('SAVE_STATS')">Edit Stats & Rotation</button>
+                <button class="btn-secondary" style="width:100%; margin-bottom:6px;" onclick="UI.triggerProtectedAction('MANAGE_CHORES')">Manage Core & Custom Chores</button>
+                <button class="btn-secondary" style="width:100%; margin-bottom:6px;" onclick="UI.triggerProtectedAction('CHANGE_PIN')">Change Parent PIN</button>
+                <button class="btn-danger" style="width:100%;" onclick="UI.triggerProtectedAction('RESET_DATA')">Reset All Game Progress</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <button class="nav-item active" onclick="UI.switchTab('quests', this)"><span class="nav-icon">⚔️</span><span>Quests</span></button>
+        <button class="nav-item" onclick="UI.switchTab('world', this)"><span class="nav-icon">🗺️</span><span>World</span></button>
+        <button class="nav-item" onclick="UI.switchTab('inventory', this)"><span class="nav-icon">🎒</span><span>Inventory</span></button>
+        <button class="nav-item" onclick="UI.switchTab('sanctuary', this)"><span class="nav-icon">🏰</span><span>Sanctuary</span></button>
+        <button class="nav-item" onclick="UI.switchTab('codex', this)"><span class="nav-icon">📖</span><span>Codex</span></button>
+    </nav>
+
+    <!-- ITEM DETAIL MODAL -->
+    <div id="modal-item-detail" class="modal-overlay">
+        <div class="modal-content">
+            <div id="modal-item-title" class="modal-title">Item Name</div>
+            <div id="modal-item-body" style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;"></div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn-secondary" onclick="UI.closeModal('modal-item-detail')">Close</button>
+                <button id="modal-item-equip-btn" class="btn-action" onclick="">Equip</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIN VERIFICATION MODAL -->
+    <div id="modal-pin" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">Enter Parent PIN</div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">Requires parent authorization. (Default PIN: 1234)</p>
+            <input type="password" id="input-pin" class="input-field" maxlength="4" placeholder="4-Digit PIN" pattern="[0-9]*" inputmode="numeric">
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn-secondary" onclick="UI.closeModal('modal-pin')">Cancel</button>
+                <button class="btn-action" onclick="UI.submitPin()">Verify PIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT STATS MODAL (PROTECTED) -->
+    <div id="modal-edit-stats" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">Edit Stats & Rotation</div>
+            <label style="font-size:0.7rem; color:var(--text-muted);">Rotation Override</label>
+            <select id="setting-rotation-override" class="input-field">
+                <option value="AUTO">Automatic Calendar Rotation</option>
+                <option value="A">Force Block A</option>
+                <option value="B">Force Block B</option>
+            </select>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;">
+                <div><label style="font-size:0.6rem;">XP</label><input type="number" id="setting-edit-xp" class="input-field"></div>
+                <div><label style="font-size:0.6rem;">Gold</label><input type="number" id="setting-edit-gold" class="input-field"></div>
+                <div><label style="font-size:0.6rem;">Energy</label><input type="number" id="setting-edit-energy" class="input-field"></div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+                <button class="btn-secondary" onclick="UI.closeModal('modal-edit-stats')">Cancel</button>
+                <button class="btn-action" onclick="Engine.saveParentStats()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD CUSTOM CHORE MODAL -->
+    <div id="modal-custom-chore" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">New Custom Trial</div>
+            <input type="text" id="custom-chore-name" class="input-field" placeholder="Chore Name">
+            <label style="font-size:0.7rem; color:var(--text-muted);">Schedule</label>
+            <select id="custom-chore-schedule" class="input-field">
+                <option value="daily">Daily</option>
+                <option value="thursday">Thursday</option>
+                <option value="weekend">Weekend</option>
+            </select>
+            <label style="font-size:0.7rem; color:var(--text-muted);">Active Block</label>
+            <select id="custom-chore-block" class="input-field">
+                <option value="BOTH">Both Blocks A & B</option>
+                <option value="A">Block A Only</option>
+                <option value="B">Block B Only</option>
+            </select>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                <button class="btn-secondary" onclick="UI.closeModal('modal-custom-chore')">Cancel</button>
+                <button class="btn-action" onclick="Engine.addCustomChore()">Add Trial</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHORE MANAGEMENT MODAL -->
+    <div id="modal-manage-chores" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">Manage All Chores</div>
+            <div id="admin-chore-list"></div>
+            <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+                <button class="btn-secondary" onclick="UI.closeModal('modal-manage-chores')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PIN MODAL -->
+    <div id="modal-change-pin" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title">Update Parent PIN</div>
+            <input type="password" id="new-pin-1" class="input-field" maxlength="4" placeholder="New 4-Digit PIN">
+            <input type="password" id="new-pin-2" class="input-field" maxlength="4" placeholder="Confirm New PIN">
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn-secondary" onclick="UI.closeModal('modal-change-pin')">Cancel</button>
+                <button class="btn-action" onclick="Engine.saveNewPin()">Save New PIN</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. DATA MODELS & CONSTANTS
+        // ==========================================
+        const STORAGE_KEY = "ROSALIES_TRIALS_MASTER_RPG_V2";
+
+        const INITIAL_CORE_CHORES = [
+            // BLOCK A
+            { id: "a-walk-dogs", name: "Walk dogs 15 minutes", schedule: "daily", block: "A", core: true, archived: false },
+            { id: "a-after-dinner", name: "After dinner: load dishwasher, wash recycles/ziplocs, wipe counters/sink", schedule: "daily", block: "A", core: true, archived: false },
+            { id: "a-laundry", name: "Start/rotate laundry to main basket, get laundry from Mom's room, CLEAN DRYER LINT TRAP", schedule: "daily", block: "A", core: true, archived: false },
+            { id: "a-piano", name: "Practice Piano", schedule: "daily", block: "A", core: true, archived: false },
+            { id: "a-recycling", name: "Take recycles out when full and to curb Thursday night", schedule: "thursday", block: "A", core: true, archived: false },
+            { id: "a-rec-room-dust", name: "Move all items and dust rec room surfaces (tables, shelves, dresser, couch table)", schedule: "weekend", block: "A", core: true, archived: false },
+            { id: "a-rec-room-vacuum", name: "Big vacuum: rec room, laundry room, hall, bathroom. Check laundry floor", schedule: "weekend", block: "A", core: true, archived: false },
+
+            // BLOCK B
+            { id: "b-dishwasher", name: "Unload dishwasher and clean food trap daily", schedule: "daily", block: "B", core: true, archived: false },
+            { id: "b-tineco", name: "Tineco vacuum (min 10 mins): dining, kitchen, living, bath, mud trail, hall (move chairs/stool)", schedule: "daily", block: "B", core: true, archived: false },
+            { id: "b-laundry", name: "Sort laundry, fold/put away towels, fold/put away square stuff, return baskets", schedule: "daily", block: "B", core: true, archived: false },
+            { id: "b-piano", name: "Practice Piano", schedule: "daily", block: "B", core: true, archived: false },
+            { id: "b-garbage", name: "Take main garbage out when full and to curb Thursday night", schedule: "thursday", block: "B", core: true, archived: false },
+            { id: "b-living-room-dust", name: "Move all items and dust living room surfaces (ledge, piano, tables)", schedule: "weekend", block: "B", core: true, archived: false },
+            { id: "b-living-room-vacuum", name: "Big vacuum: living room rug, front/back entry rugs. Move bench", schedule: "weekend", block: "B", core: true, archived: false }
+        ];
+
+        const REGIONS = [
+            { id: 1, name: "The Trial Grounds", quarter: "Q1", unlockLvl: 1, boss: "The Shadow Warden", desc: "Training area for fledgling heroes." },
+            { id: 2, name: "The Dark Forest", quarter: "Q2", unlockLvl: 3, boss: "The Thornroot Guardian", desc: "Mysterious woodland with friendly sprites." },
+            { id: 3, name: "The Ruined Kingdom", quarter: "Q3", unlockLvl: 5, boss: "The Clockwork Queen", desc: "Ancient castles and forgotten history." },
+            { id: 4, name: "The Forgotten Frontier", quarter: "Q4", unlockLvl: 7, boss: "The Golden Golem", desc: "Wide open rolling plains and cliffs." },
+            { id: 5, name: "The Ancient Realms", quarter: "Q5", unlockLvl: 9, boss: "The Colossus of Echoes", desc: "Giant stone monuments of old magic." },
+            { id: 6, name: "The Whispering Wilds", quarter: "Q6", unlockLvl: 12, boss: "The Great Mossbeast", desc: "Living wilderness of giant flowers." },
+            { id: 7, name: "The Skyreach Isles", quarter: "Q7", unlockLvl: 15, boss: "The Stormbird", desc: "Floating sky islands and wind routes." },
+            { id: 8, name: "The Starfall Kingdom", quarter: "Q8", unlockLvl: 20, boss: "The Celestial Guardian", desc: "Starlight, constellations, and ancient magic." }
+        ];
+
+        const ALL_ITEMS = [
+            { id: "w1", name: "The Extremely Polite Sword", type: "weapon", rarity: "common", icon: "🗡️", power: 5, desc: "Bows before every strike." },
+            { id: "w2", name: "Bonkblade 3000", type: "weapon", rarity: "uncommon", icon: "⚔️", power: 12, desc: "Makes a satisfying bonk sound." },
+            { id: "w3", name: "Moonwhacker", type: "weapon", rarity: "legendary", icon: "🌙", power: 35, desc: "Forged from fallen starlight." },
+            { id: "a1", name: "Braveheart Tunic", type: "armor", rarity: "common", icon: "👕", power: 4, desc: "Comfy and surprisingly sturdy." },
+            { id: "a2", name: "Shadow Cloak", type: "armor", rarity: "rare", icon: "🧥", power: 15, desc: "Helps you blend into dark rooms." },
+            { id: "acc1", name: "Lucky Acorn", type: "accessory", rarity: "uncommon", icon: "🌰", power: 8, desc: "+5% bonus loot chance." },
+            { id: "acc2", name: "Crown of Good Decisions", type: "accessory", rarity: "epic", icon: "👑", power: 22, desc: "Helps you choose wisely." }
+        ];
+
+        let state = {
+            saveVersion: 2,
+            player: {
+                name: "Rosalie",
+                level: 1,
+                xp: 0,
+                gold: 0,
+                energy: 0,
+                currentRegionId: 1,
+                stats: { courage: 10, wisdom: 10, agility: 10, kindness: 10, craft: 10 },
+                totals: { choresDone: 0, questsDone: 0, bossesDefeated: 0, goldEarned: 0 }
+            },
+            settings: { parentPin: "1234", rotationOverride: "AUTO" },
+            chores: [...INITIAL_CORE_CHORES],
+            taskInstances: {},
+            bossEncounters: {},
+            inventory: ["w1", "a1"],
+            equipped: { weapon: "w1", armor: "a1", accessory: null },
+            dailyTreasureCount: 0,
+            sanctuaryDecorations: ["Novice Hero Banner"],
+            achievements: {
+                "first_step": { name: "First Step", desc: "Complete your first trial", unlocked: false },
+                "house_hero": { name: "House Hero", desc: "Complete 10 household trials", unlocked: false }
+            }
+        };
+
+        // ==========================================
+        // 2. ENGINES & STORAGE
+        // ==========================================
+        const StorageEngine = {
+            save() {
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } 
+                catch (e) { console.error("Save error", e); }
+            },
+            load() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        state = { ...state, ...parsed };
+                        if (!state.chores || state.chores.length === 0) state.chores = [...INITIAL_CORE_CHORES];
+                    }
+                } catch (e) { console.error("Load error", e); }
+            }
+        };
+
+        const DateEngine = {
+            getNow() { return new Date(); },
+            getTodayString() {
+                const now = this.getNow();
+                return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            },
+            getFormattedDate() {
+                return this.getNow().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+            },
+            getActiveBlock() {
+                if (state.settings.rotationOverride && state.settings.rotationOverride !== "AUTO") return state.settings.rotationOverride;
+                const anchorBlockB = new Date(2026, 8, 20, 0, 0, 0); // Sept 20, 2026
+                const now = this.getNow();
+                if (now < new Date(2026, 8, 13, 0, 0, 0)) return "A";
+                const diffDays = Math.floor((now.getTime() - anchorBlockB.getTime()) / (1000 * 3600 * 24));
+                const diffWeeks = Math.floor((diffDays + (diffDays < 0 ? -6 : 0)) / 7);
+                return (diffDays >= 0 && diffWeeks % 2 === 0) ? "B" : "A";
+            }
+        };
+
+        const Engine = {
+            pendingProtectedAction: null,
+
+            getRewardForSchedule(schedule) {
+                switch(schedule) {
+                    case "thursday": return { xp: 15, gold: 8, energy: 1 };
+                    case "weekend": return { xp: 20, gold: 10, energy: 2 };
+                    default: return { xp: 10, gold: 5, energy: 1 };
+                }
+            },
+
+            completeTask(choreId, schedule) {
+                const todayStr = DateEngine.getTodayString();
+                const instanceKey = `${choreId}_${todayStr}`;
+                if (state.taskInstances[instanceKey]) return;
+
+                state.taskInstances[instanceKey] = true;
+                const reward = this.getRewardForSchedule(schedule);
+
+                state.player.xp += reward.xp;
+                state.player.gold += reward.gold;
+                state.player.energy += reward.energy;
+                state.player.totals.choresDone++;
+                state.player.totals.goldEarned += reward.gold;
+
+                // Daily Treasure Meter
+                state.dailyTreasureCount++;
+                if (state.dailyTreasureCount >= 3) {
+                    state.dailyTreasureCount = 0;
+                    this.triggerLootDrop();
+                }
+
+                // Achievements
+                if (state.player.totals.choresDone >= 1) state.achievements["first_step"].unlocked = true;
+                if (state.player.totals.choresDone >= 10) state.achievements["house_hero"].unlocked = true;
+
+                // Level up formula: 100 XP per level
+                const newLevel = Math.floor(state.player.xp / 100) + 1;
+                if (newLevel > state.player.level) {
+                    state.player.level = newLevel;
+                    state.player.stats.courage += 2;
+                    state.player.stats.wisdom += 2;
+                    UI.showToast("✨ LEVEL UP! ✨", `Rosalie reached Level ${newLevel}! +2 Courage, +2 Wisdom`);
+                } else {
+                    UI.showToast("TRIAL COMPLETE", `+${reward.xp} XP | +${reward.gold} Gold | +${reward.energy} Energy`);
+                }
+
+                StorageEngine.save();
+                UI.render();
+            },
+
+            triggerLootDrop() {
+                const unowned = ALL_ITEMS.filter(i => !state.inventory.includes(i.id));
+                if (unowned.length > 0) {
+                    const found = unowned[Math.floor(Math.random() * unowned.length)];
+                    state.inventory.push(found.id);
+                    UI.showToast("🎁 TREASURE CHEST OPENED!", `Found: ${found.name} (${found.rarity.toUpperCase()})`);
+                } else {
+                    state.player.gold += 25;
+                    UI.showToast("🎁 CHEST REWARD", `+25 Bonus Gold!`);
+                }
+            },
+
+            buyItem(itemId, cost) {
+                if (state.player.gold < cost) {
+                    alert("Not enough Gold!");
+                    return;
+                }
+                state.player.gold -= cost;
+                state.inventory.push(itemId);
+                StorageEngine.save();
+                UI.render();
+                UI.showToast("PURCHASED!", "Item added to inventory.");
+            },
+
+            equipItem(itemId) {
+                const item = ALL_ITEMS.find(i => i.id === itemId);
+                if (item) {
+                    state.equipped[item.type] = itemId;
+                    StorageEngine.save();
+                    UI.closeModal('modal-item-detail');
+                    UI.render();
+                    UI.showToast("EQUIPPED", `${item.name} is now active.`);
+                }
+            },
+
+            addCustomChore() {
+                const name = document.getElementById("custom-chore-name").value.trim();
+                const schedule = document.getElementById("custom-chore-schedule").value;
+                const block = document.getElementById("custom-chore-block").value;
+                if (!name) return alert("Enter trial name.");
+
+                state.chores.push({ id: "custom_" + Date.now(), name, schedule, block, core: false, archived: false });
+                StorageEngine.save();
+                UI.closeModal("modal-custom-chore");
+                UI.render();
+            },
+
+            toggleArchiveChore(choreId) {
+                const chore = state.chores.find(c => c.id === choreId);
+                if (chore) {
+                    chore.archived = !chore.archived;
+                    StorageEngine.save();
+                    UI.renderAdminChoreList();
+                    UI.render();
+                }
+            },
+
+            saveNewPin() {
+                const pin1 = document.getElementById("new-pin-1").value;
+                const pin2 = document.getElementById("new-pin-2").value;
+                if (pin1.length !== 4 || isNaN(pin1) || pin1 !== pin2) return alert("Invalid matching 4-digit PIN.");
+                state.settings.parentPin = pin1;
+                StorageEngine.save();
+                UI.closeModal("modal-change-pin");
+                UI.showToast("PIN UPDATED", "Parent PIN updated.");
+            },
+
+            saveParentStats() {
+                state.player.xp = parseInt(document.getElementById("setting-edit-xp").value) || 0;
+                state.player.gold = parseInt(document.getElementById("setting-edit-gold").value) || 0;
+                state.player.energy = parseInt(document.getElementById("setting-edit-energy").value) || 0;
+                state.player.level = Math.floor(state.player.xp / 100) + 1;
+                state.settings.rotationOverride = document.getElementById("setting-rotation-override").value;
+
+                StorageEngine.save();
+                UI.closeModal("modal-edit-stats");
+                UI.render();
+                UI.showToast("STATS UPDATED", "Parent settings applied.");
+            },
+
+            executeProtectedAction() {
+                const action = this.pendingProtectedAction;
+                this.pendingProtectedAction = null; // PIN Authorization immediately expires!
+
+                if (action === "SAVE_STATS") {
+                    document.getElementById("setting-edit-xp").value = state.player.xp;
+                    document.getElementById("setting-edit-gold").value = state.player.gold;
+                    document.getElementById("setting-edit-energy").value = state.player.energy;
+                    document.getElementById("setting-rotation-override").value = state.settings.rotationOverride || "AUTO";
+                    UI.openModal("modal-edit-stats");
+                } else if (action === "MANAGE_CHORES") {
+                    UI.renderAdminChoreList();
+                    UI.openModal("modal-manage-chores");
+                } else if (action === "CHANGE_PIN") {
+                    UI.openModal("modal-change-pin");
+                } else if (action === "RESET_DATA") {
+                    if (confirm("Reset all game progress?")) {
+                        localStorage.removeItem(STORAGE_KEY);
+                        location.reload();
+                    }
+                }
+            },
+
+            strikeBoss() {
+                const todayStr = DateEngine.getTodayString();
+                const weeklyTasks = UI.getWeeklyAvailableTasks();
+                const bossMaxHp = Math.max(10, weeklyTasks.length * 10);
+                const damageAvailable = state.player.energy * 10;
+
+                if (state.bossEncounters[todayStr]) return alert("Weekly Boss defeated!");
+                if (damageAvailable >= bossMaxHp) {
+                    state.bossEncounters[todayStr] = true;
+                    state.player.gold += 50;
+                    state.player.xp += 100;
+                    state.player.energy = 0;
+                    state.player.totals.bossesDefeated++;
+                    state.sanctuaryDecorations.push("Shadow Warden Boss Trophy");
+                    StorageEngine.save();
+                    UI.render();
+                    UI.showToast("VICTORY!", "Boss Defeated! Trophy added to Sanctuary.");
+                } else {
+                    alert(`Need ${bossMaxHp} DMG capacity (${Math.ceil(bossMaxHp/10)} Energy) to defeat boss.`);
+                }
+            }
+        };
+
+        // ==========================================
+        // 3. UI RENDERING ENGINE
+        // ==========================================
+        const UI = {
+            switchTab(tabId, el) {
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                document.getElementById(`tab-${tabId}`).classList.add('active');
+                if (el) el.classList.add('active');
+            },
+
+            openModal(modalId) { document.getElementById(modalId).classList.add('active'); },
+            closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); },
+
+            showToast(title, body) {
+                const toast = document.getElementById("toast");
+                document.getElementById("toast-title").innerText = title;
+                document.getElementById("toast-body").innerText = body;
+                toast.classList.add("show");
+                setTimeout(() => toast.classList.remove("show"), 3000);
+            },
+
+            saveHeroName() {
+                const name = document.getElementById("setting-hero-name").value.trim();
+                if (name) {
+                    state.player.name = name;
+                    StorageEngine.save();
+                    this.render();
+                    this.showToast("HERO RENAMED", `Welcome, ${name}!`);
+                }
+            },
+
+            triggerProtectedAction(actionType) {
+                Engine.pendingProtectedAction = actionType;
+                document.getElementById("input-pin").value = "";
+                this.openModal("modal-pin");
+            },
+
+            submitPin() {
+                if (document.getElementById("input-pin").value === state.settings.parentPin) {
+                    this.closeModal("modal-pin");
+                    Engine.executeProtectedAction();
+                } else alert("Incorrect PIN.");
+            },
+
+            openCustomChoreModal() { this.openModal("modal-custom-chore"); },
+
+            getWeeklyAvailableTasks() {
+                const activeBlock = DateEngine.getActiveBlock();
+                return state.chores.filter(c => !c.archived && (c.block === activeBlock || c.block === "BOTH"));
+            },
+
+            showItemModal(itemId) {
+                const item = ALL_ITEMS.find(i => i.id === itemId);
+                if (!item) return;
+                document.getElementById("modal-item-title").innerText = `${item.icon} ${item.name}`;
+                document.getElementById("modal-item-body").innerHTML = `
+                    <div style="color:var(--gold-light); font-weight:700; text-transform:uppercase;">${item.rarity} ${item.type}</div>
+                    <div style="margin:8px 0; color:#fff;">${item.desc}</div>
+                    <div style="font-size:0.8rem; color:#60a5fa;">Power Rating: +${item.power}</div>
+                `;
+                const btn = document.getElementById("modal-item-equip-btn");
+                btn.onclick = () => Engine.equipItem(item.id);
+                this.openModal("modal-item-detail");
+            },
+
+            render() {
+                const activeBlock = DateEngine.getActiveBlock();
+                const todayStr = DateEngine.getTodayString();
+                const activeRegion = REGIONS.find(r => r.id === state.player.currentRegionId) || REGIONS[0];
+
+                // HUD updates
+                document.getElementById("hud-hero-name").innerText = state.player.name;
+                document.getElementById("hud-hero-level").innerText = `Lvl ${state.player.level}`;
+                document.getElementById("hud-block-indicator").innerText = `BLOCK ${activeBlock}`;
+                document.getElementById("hud-xp").innerText = state.player.xp;
+                document.getElementById("hud-gold").innerText = state.player.gold;
+                document.getElementById("hud-energy").innerText = state.player.energy;
+                document.getElementById("hud-region").innerText = activeRegion.name;
+                document.getElementById("hud-xp-bar").style.width = `${state.player.xp % 100}%`;
+
+                document.getElementById("date-display").innerText = `${DateEngine.getFormattedDate()} • Block ${activeBlock}`;
+
+                // Daily Treasure Meter
+                document.getElementById("treasure-meter-text").innerText = `${state.dailyTreasureCount} / 3 Chores`;
+                document.getElementById("treasure-meter-bar").style.width = `${(state.dailyTreasureCount / 3) * 100}%`;
+
+                // Render Chores
+                const container = document.getElementById("task-list-container");
+                container.innerHTML = "";
+                const dayOfWeek = DateEngine.getNow().getDay();
+
+                const activeChores = state.chores.filter(c => {
+                    if (c.archived) return false;
+                    if (c.block !== "BOTH" && c.block !== activeBlock) return false;
+                    if (c.schedule === "daily") return true;
+                    if (c.schedule === "thursday" && dayOfWeek === 4) return true;
+                    if (c.schedule === "weekend" && (dayOfWeek === 0 || dayOfWeek === 6)) return true;
+                    return false;
+                });
+
+                if (activeChores.length === 0) {
+                    container.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:10px;">No trials for today.</div>`;
+                } else {
+                    activeChores.forEach(chore => {
+                        const isDone = !!state.taskInstances[`${chore.id}_${todayStr}`];
+                        const reward = Engine.getRewardForSchedule(chore.schedule);
+                        container.innerHTML += `
+                            <div class="task-card ${isDone ? 'completed' : ''} ${!chore.core ? 'custom' : ''}">
+                                <div class="task-info">
+                                    <div class="task-name">${chore.name}</div>
+                                    <div>
+                                        <span class="reward-tag" style="color:#60a5fa;">+${reward.xp} XP</span>
+                                        <span class="reward-tag" style="color:var(--gold-light);">+${reward.gold} G</span>
+                                        <span class="reward-tag" style="color:#f43f5e;">+${reward.energy} E</span>
+                                    </div>
+                                </div>
+                                <button class="btn-complete ${isDone ? 'done' : ''}" onclick="Engine.completeTask('${chore.id}', '${chore.schedule}')" ${isDone ? 'disabled' : ''}>
+                                    ${isDone ? '✓ Done' : 'Complete'}
+                                </button>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Quests Container
+                document.getElementById("quest-list-container").innerHTML = `
+                    <div class="quest-card">
+                        <div class="quest-header"><span>Restore the Village Hearth</span><span>Story Quest</span></div>
+                        <div class="quest-desc">Complete 5 household trials to help restore hearth magic.</div>
+                        <div style="font-size:0.75rem; color:var(--gold-light);">Progress: ${Math.min(5, state.player.totals.choresDone)} / 5 Chores</div>
+                    </div>
+                `;
+
+                // Regions list
+                const regContainer = document.getElementById("region-list-container");
+                regContainer.innerHTML = "";
+                REGIONS.forEach(reg => {
+                    const isUnlocked = state.player.level >= reg.unlockLvl;
+                    regContainer.innerHTML += `
+                        <div class="region-card ${isUnlocked ? 'active' : 'locked'}">
+                            <div class="region-header">
+                                <span class="region-name">${reg.name}</span>
+                                <span class="region-q">${reg.quarter}</span>
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">${reg.desc}</div>
+                            <div style="font-size:0.7rem; color:${isUnlocked ? 'var(--success-light)' : 'var(--danger-light)'}; font-weight:700;">
+                                ${isUnlocked ? 'Unlocked' : `Requires Lvl ${reg.unlockLvl}`}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Inventory & Equipment
+                const invContainer = document.getElementById("inventory-container");
+                invContainer.innerHTML = "";
+                state.inventory.forEach(itemId => {
+                    const item = ALL_ITEMS.find(i => i.id === itemId);
+                    if (!item) return;
+                    const isEquipped = state.equipped[item.type] === itemId;
+                    invContainer.innerHTML += `
+                        <div class="inv-slot rarity-${item.rarity}" onclick="UI.showItemModal('${item.id}')">
+                            ${isEquipped ? '<span class="equipped-badge">EQ</span>' : ''}
+                            <span>${item.icon}</span>
+                        </div>
+                    `;
+                });
+
+                document.getElementById("eq-weapon").innerText = state.equipped.weapon ? ALL_ITEMS.find(i=>i.id===state.equipped.weapon).name : "None";
+                document.getElementById("eq-armor").innerText = state.equipped.armor ? ALL_ITEMS.find(i=>i.id===state.equipped.armor).name : "None";
+                document.getElementById("eq-accessory").innerText = state.equipped.accessory ? ALL_ITEMS.find(i=>i.id===state.equipped.accessory).name : "None";
+
+                // Shop Container
+                const shopContainer = document.getElementById("shop-container");
+                shopContainer.innerHTML = "";
+                const shopItems = ALL_ITEMS.filter(i => !state.inventory.includes(i.id));
+                if (shopItems.length === 0) shopContainer.innerHTML = `<div style="font-size:0.75rem; color:var(--text-muted);">Shop sold out!</div>`;
+                shopItems.forEach(item => {
+                    shopContainer.innerHTML += `
+                        <div class="card" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding:8px 12px;">
+                            <div>
+                                <span style="font-size:1.2rem; margin-right:6px;">${item.icon}</span>
+                                <span style="font-size:0.85rem; font-weight:700;">${item.name}</span>
+                            </div>
+                            <button class="btn-action" onclick="Engine.buyItem('${item.id}', 30)">Buy (30 Gold)</button>
+                        </div>
+                    `;
+                });
+
+                // Sanctuary
+                const sanctContainer = document.getElementById("sanctuary-decorations");
+                sanctContainer.innerHTML = "";
+                state.sanctuaryDecorations.forEach(dec => {
+                    sanctContainer.innerHTML += `
+                        <div class="card card-alt" style="text-align:center; padding:10px;">
+                            <div style="font-size:1.5rem;">🏺</div>
+                            <div style="font-size:0.75rem; font-weight:700; color:var(--gold-light);">${dec}</div>
+                        </div>
+                    `;
+                });
+
+                // Stats & Achievements
+                document.getElementById("rpg-stat-courage").innerText = state.player.stats.courage;
+                document.getElementById("rpg-stat-wisdom").innerText = state.player.stats.wisdom;
+                document.getElementById("rpg-stat-agility").innerText = state.player.stats.agility;
+                document.getElementById("rpg-stat-kindness").innerText = state.player.stats.kindness;
+                document.getElementById("rpg-stat-craft").innerText = state.player.stats.craft;
+
+                const achContainer = document.getElementById("achievement-container");
+                achContainer.innerHTML = "";
+                Object.keys(state.achievements).forEach(key => {
+                    const ach = state.achievements[key];
+                    achContainer.innerHTML += `
+                        <div class="card" style="display:flex; justify-content:space-between; align-items:center; opacity:${ach.unlocked ? 1 : 0.5}; padding:8px 12px; margin-bottom:6px;">
+                            <div>
+                                <div style="font-size:0.85rem; font-weight:700; color:var(--gold-light);">${ach.name}</div>
+                                <div style="font-size:0.7rem; color:var(--text-muted);">${ach.desc}</div>
+                            </div>
+                            <div style="font-size:0.75rem; font-weight:700;">${ach.unlocked ? '✅' : '🔒'}</div>
+                        </div>
+                    `;
+                });
+            },
+
+            renderAdminChoreList() {
+                const list = document.getElementById("admin-chore-list");
+                list.innerHTML = "";
+                state.chores.forEach(chore => {
+                    list.innerHTML += `
+                        <div style="background:rgba(0,0,0,0.3); padding:6px; border-radius:4px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+                            <span>[Block ${chore.block}] ${chore.name}</span>
+                            <button class="${chore.archived ? 'btn-action' : 'btn-danger'}" style="padding:2px 6px; font-size:0.65rem;" onclick="Engine.toggleArchiveChore('${chore.id}')">
+                                ${chore.archived ? 'Restore' : 'Archive'}
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+        };
+
+        // ==========================================
+        // 4. INITIALIZATION
+        // ==========================================
+        window.addEventListener("DOMContentLoaded", () => {
+            StorageEngine.load();
+            UI.render();
+            setInterval(() => UI.render(), 60000);
+        });
+    </script>
+</body>
+</html>
